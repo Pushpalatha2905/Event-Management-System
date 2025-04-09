@@ -12,20 +12,22 @@ from PIL import Image
 import io
 import base64
 
-# Download NLTK data
+# Download NLTK data with error handling
 try:
     nltk.data.find('tokenizers/punkt')
     nltk.data.find('vader_lexicon')
 except LookupError:
-    nltk.download('punkt')
-    nltk.download('vader_lexicon')
+    st.warning("Downloading NLTK data...")
+    nltk.download('punkt', quiet=True)
+    nltk.download('vader_lexicon', quiet=True)
+    st.success("NLTK data downloaded successfully!")
 
 # Embedded CSS for attractive design
 st.markdown("""
     <style>
     .stApp {
         background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
-        font-family: 'Poppins', sans-serif;
+        font-family: 'Arial', sans-serif;
     }
     h1, h2, h3 {
         color: #0277bd;
@@ -88,9 +90,13 @@ def match_skills_to_role(skills):
     return best_role if best_score > 0.3 else "attendee"
 
 def analyze_sentiment(feedback):
-    sia = SentimentIntensityAnalyzer()
-    score = sia.polarity_scores(feedback)
-    return "Positive" if score['compound'] > 0.1 else "Negative" if score['compound'] < -0.1 else "Neutral"
+    try:
+        sia = SentimentIntensityAnalyzer()
+        score = sia.polarity_scores(feedback)
+        return "Positive" if score['compound'] > 0.1 else "Negative" if score['compound'] < -0.1 else "Neutral"
+    except Exception as e:
+        st.error(f"Sentiment analysis failed: {e}")
+        return "Unknown"
 
 def suggest_schedule(preferences):
     times = ["09:00", "11:00", "14:00", "16:00"]
