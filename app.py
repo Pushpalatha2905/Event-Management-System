@@ -29,7 +29,7 @@ page = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📥 Register", "📋 At
 # --- PAGE CONTENTS ---
 
 if page == "🏠 Home":
-    st.image("https://images.unsplash.com/photo-1551836022-d5d88e9218df", use_column_width=True)
+    st.image("https://images.unsplash.com/photo-1551836022-d5d88e9218df", use_container_width=True)
 
     st.markdown("""
         <div style="background-color:#ffffff; padding: 25px; border-radius: 18px; border: 1px solid #e0e0e0; box-shadow: 0px 2px 10px rgba(0,0,0,0.05);">
