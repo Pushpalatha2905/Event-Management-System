@@ -2,116 +2,98 @@ import streamlit as st
 import pandas as pd
 import uuid
 from datetime import datetime
-from streamlit_extras.switch_page_button import switch_page
-from streamlit_extras.add_vertical_space import add_vertical_space
-from streamlit_extras.colored_header import colored_header
 from PIL import Image
 import qrcode
 import io
 import base64
 
-# Initialize data stores
-if 'events' not in st.session_state:
-    st.session_state.events = []
+# Set page config with better theme
+st.set_page_config(page_title="NextGen Events | Vignan University 🎟️" , layout="centered", page_icon="🎉")
 
-if 'registrations' not in st.session_state:
-    st.session_state.registrations = {}
+# Initialize session state
+if 'participants' not in st.session_state:
+    st.session_state.participants = []
 
-# Page config
-st.set_page_config(page_title="EventSync | Event Management System", layout="wide", page_icon="🎉")
+# Header UI
+st.markdown("<h1 style='text-align: center; color: #4CAF50;'>🎉 Smart Event Management System</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center;'>Plan, register, and analyze your events with ease.</p>", unsafe_allow_html=True)
+st.divider()
 
-# ---------------- HEADER ----------------
-st.markdown("<h1 style='text-align: center; color: #4CAF50;'>🎉 Welcome to EventPro+ 🎉</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; font-size: 18px;'>Plan, Register, and Attend Events Seamlessly!</p>", unsafe_allow_html=True)
-add_vertical_space(1)
+# Sidebar Navigation
+page = st.sidebar.radio("🔎 Navigate", ["Register", "Participants List", "Analytics"])
 
-# Theme toggle
-theme = st.sidebar.radio("Choose Theme", ["🌞 Light Mode", "🌙 Dark Mode"])
-if theme == "🌙 Dark Mode":
-    st.markdown("""<style>body { background-color: #1e1e1e; color: white; }</style>""", unsafe_allow_html=True)
+# Event Registration Page
+if page == "Register":
+    st.subheader("📥 Register for an Event")
 
-# ---------------- EVENT CREATION ----------------
-with st.expander("📝 Create New Event", expanded=False):
-    with st.form("event_form"):
-        name = st.text_input("Event Name")
-        description = st.text_area("Event Description", height=100)
-        location = st.text_input("Location")
-        date = st.date_input("Date")
-        time = st.time_input("Time")
-        host = st.text_input("Hosted By")
-        submit = st.form_submit_button("➕ Add Event")
+    with st.form("register_form"):
+        col1, col2 = st.columns(2)
+        with col1:
+            name = st.text_input("👤 Name", max_chars=50)
+            email = st.text_input("📧 Email")
+            phone = st.text_input("📱 Phone Number")
+        with col2:
+            event_name = st.selectbox("🎯 Select Event", ["AI Conference 2025", "Startup Pitch Fest", "Tech Expo", "Crypto Workshop"])
+            num_tickets = st.number_input("🎫 Number of Tickets", min_value=1, max_value=10, value=1)
+            event_date = st.date_input("📅 Event Date", min_value=datetime.today())
+        submitted = st.form_submit_button("✅ Register Now")
 
-        if submit:
-            if name and location:
-                new_event = {
-                    "id": str(uuid.uuid4()),
-                    "name": name,
-                    "description": description,
-                    "location": location,
-                    "date": str(date),
-                    "time": str(time),
-                    "host": host
-                }
-                st.session_state.events.append(new_event)
-                st.success("✅ Event Created Successfully!")
-            else:
-                st.warning("❗ Please fill in all required fields.")
+        if submitted:
+            participant_id = str(uuid.uuid4())[:8]
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-# ---------------- EVENT DISPLAY ----------------
-colored_header("📅 Upcoming Events", description="Discover events & register now!", color_name="green-70")
+            for _ in range(num_tickets):
+                st.session_state.participants.append({
+                    "ID": participant_id,
+                    "Name": name,
+                    "Email": email,
+                    "Phone": phone,
+                    "Event": event_name,
+                    "Date": event_date.strftime("%Y-%m-%d"),
+                    "Timestamp": timestamp
+                })
 
-for event in st.session_state.events:
-    with st.container(border=True):
-        st.subheader(event["name"])
-        st.caption(f"📍 {event['location']} | 🗓️ {event['date']} at ⏰ {event['time']}")
-        st.write(f"📝 {event['description']}")
-        st.markdown(f"👤 Hosted by: **{event['host']}**")
+            st.success(f"🎉 Registered successfully for {event_name}!")
+            st.balloons()
 
-        # Registration Button
-        if st.button(f"🎟️ Register for {event['name']}", key=event["id"]):
-            with st.form(f"register_{event['id']}"):
-                name = st.text_input("Your Name")
-                email = st.text_input("Email Address")
-                register = st.form_submit_button("✅ Submit Registration")
+            # Generate QR code for the ticket
+            qr_data = f"{participant_id} - {name} - {event_name}"
+            qr = qrcode.make(qr_data)
+            buf = io.BytesIO()
+            qr.save(buf, format="PNG")
+            st.image(buf.getvalue(), caption="🎟️ Your Event QR Ticket", width=200)
 
-                if register:
-                    if name and email:
-                        registration_id = str(uuid.uuid4())
-                        if event["id"] not in st.session_state.registrations:
-                            st.session_state.registrations[event["id"]] = []
-
-                        st.session_state.registrations[event["id"]].append({
-                            "name": name,
-                            "email": email,
-                            "registered_at": datetime.now().isoformat(),
-                            "ticket_id": registration_id
-                        })
-
-                        # Generate QR code
-                        qr = qrcode.make(f"{event['name']} | {name} | {registration_id}")
-                        buf = io.BytesIO()
-                        qr.save(buf)
-                        buf.seek(0)
-                        img_base64 = base64.b64encode(buf.read()).decode()
-
-                        st.success("🎉 Registered Successfully!")
-                        st.image(f"data:image/png;base64,{img_base64}", caption="🎫 Your QR Code Ticket")
-
-                    else:
-                        st.warning("Please enter your details.")
-
-# ---------------- ANALYTICS ----------------
-with st.expander("📊 View Registration Stats"):
-    if st.session_state.registrations:
-        for event in st.session_state.events:
-            count = len(st.session_state.registrations.get(event["id"], []))
-            st.markdown(f"**{event['name']}**: {count} Registrations")
+# Participants Page
+elif page == "Participants List":
+    st.subheader("📋 Registered Participants")
+    if len(st.session_state.participants) == 0:
+        st.info("No participants registered yet.")
     else:
-        st.info("No registrations yet.")
+        df = pd.DataFrame(st.session_state.participants)
+        st.dataframe(df, use_container_width=True)
 
-# ---------------- FOOTER ----------------
+        # Download CSV
+        csv = df.to_csv(index=False).encode()
+        st.download_button("📥 Download CSV", data=csv, file_name="participants.csv", mime="text/csv")
+
+# Analytics Page
+elif page == "Analytics":
+    st.subheader("📊 Event Registration Insights")
+
+    if len(st.session_state.participants) == 0:
+        st.info("No data available for analytics.")
+    else:
+        df = pd.DataFrame(st.session_state.participants)
+
+        st.markdown("#### 📈 Event-wise Registrations")
+        event_counts = df['Event'].value_counts()
+        st.bar_chart(event_counts)
+
+        st.markdown("#### ⏱️ Registration Over Time")
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'])
+        df_time = df.groupby(df['Timestamp'].dt.date).size()
+        st.line_chart(df_time)
+
+# Footer
 st.markdown("---")
-st.markdown(
-    "<p style='text-align:center; font-size:14px;'>EventSync | <b>Vignan's Univeristy Events </b> | © 2025</p>",
-    unsafe_allow_html=True
-)
+st.markdown("<p style='text-align:center; font-size:14px;'>EventSync | <b>Vignan's University Events</b> | © 2025</p>", unsafe_allow_html=True)
