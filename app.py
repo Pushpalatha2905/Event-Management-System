@@ -2,10 +2,8 @@ import streamlit as st
 import pandas as pd
 import uuid
 from datetime import datetime
-from PIL import Image
 import qrcode
 import io
-import base64
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="NextGen Events | Vignan University 🎟️", page_icon="🎉", layout="centered")
@@ -31,7 +29,6 @@ page = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📥 Register", "📋 At
 # --- PAGE CONTENTS ---
 
 if page == "🏠 Home":
-    st.image("https://images.unsplash.com/photo-1551836022-d5d88e9218df", use_column_width=True)
     st.markdown("### 📢 Why Use This Platform?")
     st.markdown("""
     - 🚀 Fast and easy event registration  
