@@ -29,15 +29,29 @@ page = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📥 Register", "📋 At
 # --- PAGE CONTENTS ---
 
 if page == "🏠 Home":
-    st.markdown("### 📢 Why Use This Platform?")
+    st.image("https://img.freepik.com/free-vector/event-management-abstract-concept-illustration_335657-3880.jpg", use_column_width=True)
+
     st.markdown("""
-    - 🚀 Fast and easy event registration  
-    - ✅ QR Ticket generation for seamless check-in  
-    - 📬 Instant email confirmation (simulated)  
-    - 📊 Real-time analytics  
-    - 🗣️ Speaker and sponsor highlights  
-    """)
-    st.success("Made for Students by Students @ Vignan's University ✨")
+        <div style="background-color:#f9f9f9; padding: 20px; border-radius: 15px; border: 1px solid #ddd;">
+            <h3 style="color:#4CAF50;">📢 Why Use This Platform?</h3>
+            <ul style="font-size:16px; line-height:1.7;">
+                <li>🚀 Fast and easy event registration</li>
+                <li>✅ QR Ticket generation for seamless check-in</li>
+                <li>📬 Instant email confirmation (simulated)</li>
+                <li>📊 Real-time event analytics</li>
+                <li>🗣️ Speaker and sponsor highlights</li>
+            </ul>
+        </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown("""
+        <div style="text-align:center; margin-top:30px;">
+            <h4 style="color:#FF5722;">🌟 Join. Experience. Network. Grow. 🌟</h4>
+            <p style="font-size:15px;">Make every event at Vignan University unforgettable with NextGen Events! 🎓✨</p>
+        </div>  
+    """, unsafe_allow_html=True)
+
+    st.success("Made for Students by PushpaLatha @ Vignan's University ✨")
 
 elif page == "📥 Register":
     st.subheader("📥 Event Registration")
@@ -103,8 +117,8 @@ elif page == "📅 Agenda":
 
 elif page == "🎤 Speakers & Sponsors":
     st.subheader("🎤 Speakers")
-    st.markdown("- **Dr. Kumar** – AI Visionary")
-    st.markdown("- **Prof. Reddy** – ML Expert")
+    st.markdown("- **Anitha** – AI Visionary")
+    st.markdown("- **P.Sambaiah** – ML Expert ")
     st.markdown("- **Alumni Entrepreneurs** – Real-world insights")
 
     st.subheader("💼 Sponsors")
