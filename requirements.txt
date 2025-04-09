@@ -3,3 +3,4 @@ nltk==3.8.1
 reportlab==4.0.9
 qrcode==7.4.2
 pillow==10.0.0
+numpy==1.26.4  # Explicitly added to avoid build issues
