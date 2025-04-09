@@ -109,8 +109,8 @@ elif page == "📅 Agenda":
     st.markdown("""
     | Time | Topic | Speaker |
     |------|-------|---------|
-    | 10:00 AM | Opening Keynote | Dr. Kumar |
-    | 11:00 AM | AI in Education | Prof. Reddy |
+    | 10:00 AM | Opening Keynote | anitha |
+    | 11:00 AM | AI in Education | P.Sambaiah |
     | 12:30 PM | Networking Lunch | - |
     | 02:00 PM | Startup Panel | Alumni Entrepreneurs |
     """)
