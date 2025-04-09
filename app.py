@@ -29,26 +29,26 @@ page = st.sidebar.radio("🔎 Navigate", ["🏠 Home", "📥 Register", "📋 At
 # --- PAGE CONTENTS ---
 
 if page == "🏠 Home":
-    st.image("https://img.freepik.com/free-vector/event-management-abstract-concept-illustration_335657-3880.jpg", use_column_width=True)
+    st.image("https://images.unsplash.com/photo-1551836022-d5d88e9218df", use_column_width=True)
 
     st.markdown("""
-        <div style="background-color:#f9f9f9; padding: 20px; border-radius: 15px; border: 1px solid #ddd;">
-            <h3 style="color:#4CAF50;">📢 Why Use This Platform?</h3>
-            <ul style="font-size:16px; line-height:1.7;">
-                <li>🚀 Fast and easy event registration</li>
-                <li>✅ QR Ticket generation for seamless check-in</li>
-                <li>📬 Instant email confirmation (simulated)</li>
-                <li>📊 Real-time event analytics</li>
-                <li>🗣️ Speaker and sponsor highlights</li>
+        <div style="background-color:#ffffff; padding: 25px; border-radius: 18px; border: 1px solid #e0e0e0; box-shadow: 0px 2px 10px rgba(0,0,0,0.05);">
+            <h2 style="color:#2E8B57; text-align:center;">🎯 Why Choose NextGen Events?</h2>
+            <ul style="font-size:17px; color:#333333; line-height:1.8; list-style:none; padding-left: 0;">
+                <li>✅ <strong>Quick and hassle-free</strong> event registration</li>
+                <li>🎟️ Personalized <strong>QR Ticket</strong> for instant check-ins</li>
+                <li>📧 Simulated <strong>email confirmations</strong> on registration</li>
+                <li>📈 Live <strong>analytics & participation stats</strong></li>
+                <li>🎤 Highlighting <strong>speakers, sponsors & agenda</strong></li>
             </ul>
         </div>
     """, unsafe_allow_html=True)
 
     st.markdown("""
-        <div style="text-align:center; margin-top:30px;">
-            <h4 style="color:#FF5722;">🌟 Join. Experience. Network. Grow. 🌟</h4>
-            <p style="font-size:15px;">Make every event at Vignan University unforgettable with NextGen Events! 🎓✨</p>
-        </div>  
+        <div style="margin-top:40px; text-align:center;">
+            <h3 style="color:#FF6F61;">🚀 Elevate Your Campus Life with Events That Matter!</h3>
+            <p style="font-size:16px; color:#555;">Stay informed. Stay inspired. Participate in transformative events at <strong>Vignan University</strong> with <em>NextGen Events</em> 🌟</p>
+        </div>
     """, unsafe_allow_html=True)
 
     st.success("Made for Students by PushpaLatha @ Vignan's University ✨")
