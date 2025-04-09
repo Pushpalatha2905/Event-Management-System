@@ -4,28 +4,34 @@ import qrcode
 from io import BytesIO
 import base64
 from datetime import datetime
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 
-# Download NLTK data
+# Set page config as the FIRST Streamlit command
+st.set_page_config(page_title="EventSync - Event Management", layout="wide")
+
+# Attempt to import NLTK with fallback
 try:
-    nltk.data.find('tokenizers/punkt')
-    nltk.data.find('vader_lexicon')
-except LookupError:
-    st.warning("Downloading NLTK data...")
-    nltk.download('punkt', quiet=True)
-    nltk.download('vader_lexicon', quiet=True)
-    st.success("NLTK data downloaded!")
+    import nltk
+    from nltk.tokenize import word_tokenize
+    from nltk.sentiment.vader import SentimentIntensityAnalyzer
+    NLTK_AVAILABLE = True
+    # Download NLTK data
+    try:
+        nltk.data.find('tokenizers/punkt')
+        nltk.data.find('vader_lexicon')
+    except LookupError:
+        st.warning("Downloading NLTK data...")
+        nltk.download('punkt', quiet=True)
+        nltk.download('vader_lexicon', quiet=True)
+        st.success("NLTK data downloaded!")
+except ImportError:
+    NLTK_AVAILABLE = False
+    st.error("NLTK module not found. AI features (sentiment analysis, skill matching) will be disabled.")
 
 # Session State Initialization
 if 'attendees' not in st.session_state:
     st.session_state.attendees = []
 if 'feedback' not in st.session_state:
     st.session_state.feedback = []
-
-# Page Config
-st.set_page_config(page_title="EventSync - Event Management", layout="wide")
 
 # Embedded CSS for Attractive Design
 st.markdown("""
@@ -100,6 +106,8 @@ def generate_qr_code(data):
     return base64.b64encode(buf.getvalue()).decode("utf-8")
 
 def match_skills_to_role(skills):
+    if not NLTK_AVAILABLE:
+        return "attendee (AI unavailable)"
     roles = {"speaker": ["python", "data", "tech"], "volunteer": ["organize", "team", "help"]}
     tokenized_skills = set(word_tokenize(skills.lower()))
     best_role, best_score = "attendee", 0
@@ -110,6 +118,8 @@ def match_skills_to_role(skills):
     return best_role if best_score > 0.3 else "attendee"
 
 def analyze_sentiment(feedback):
+    if not NLTK_AVAILABLE:
+        return "Unknown (AI unavailable)"
     sia = SentimentIntensityAnalyzer()
     score = sia.polarity_scores(feedback)
     return "Positive" if score['compound'] > 0.1 else "Negative" if score['compound'] < -0.1 else "Neutral"
@@ -217,3 +227,7 @@ elif menu == "Feedback & Analytics":
         st.dataframe(df_feedback[['Name', 'Rating', 'Sentiment']], use_container_width=True)
         st.markdown("<h3>Average Rating</h3>", unsafe_allow_html=True)
         st.write(f"{df_feedback['Rating'].mean():.2f}/5")
+
+if __name__ == "__main__":
+    st.title("🎉 AI-Powered Event Management System")
+    main()
