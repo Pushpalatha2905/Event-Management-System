@@ -1,6 +1,5 @@
 streamlit
 pandas
+Pillow
 qrcode
-pillow
-nltk
-numpy
+streamlit-extras
