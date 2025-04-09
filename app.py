@@ -1,209 +1,88 @@
 import streamlit as st
-import nltk
-from nltk.tokenize import word_tokenize
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-import random
-from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from io import BytesIO
+import pandas as pd
 import qrcode
-from PIL import Image
-import io
+from io import BytesIO
 import base64
+from datetime import datetime
 
-# Download NLTK data with error handling
-try:
-    nltk.data.find('tokenizers/punkt')
-    nltk.data.find('vader_lexicon')
-except LookupError:
-    st.warning("Downloading NLTK data...")
-    nltk.download('punkt', quiet=True)
-    nltk.download('vader_lexicon', quiet=True)
-    st.success("NLTK data downloaded successfully!")
+# Initialize session state
+if 'attendees' not in st.session_state:
+    st.session_state.attendees = []
 
-# Embedded CSS for attractive design
-st.markdown("""
-    <style>
-    .stApp {
-        background: linear-gradient(135deg, #e0f7fa, #b2ebf2);
-        font-family: 'Arial', sans-serif;
-    }
-    h1, h2, h3 {
-        color: #0277bd;
-    }
-    .stButton>button {
-        background-color: #0277bd;
-        color: white;
-        border-radius: 25px;
-        padding: 10px 20px;
-        font-weight: bold;
-    }
-    .stButton>button:hover {
-        background-color: #01579b;
-    }
-    .stTextInput>input, .stTextArea>textarea, .stSelectbox select {
-        border: 2px solid #b3e5fc;
-        border-radius: 10px;
-        padding: 10px;
-    }
-    .stSidebar {
-        background-color: #ffffff;
-        padding: 20px;
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .card {
-        background: #ffffff;
-        padding: 20px;
-        margin: 15px 0;
-        border-radius: 15px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .hero {
-        text-align: center;
-        padding: 40px;
-        background: linear-gradient(135deg, #0277bd, #01579b);
-        color: white;
-        border-radius: 15px;
-    }
-    </style>
-""", unsafe_allow_html=True)
+st.set_page_config(page_title="Event Management System", layout="wide")
+st.title("🎉 AI-Powered Event Management System")
 
-# Sample Data
-events = [
-    {"id": 1, "title": "Tech Summit 2025", "date": "2025-05-10", "location": "Remote", "description": "Explore tech trends."},
-    {"id": 2, "title": "Data Conference", "date": "2025-06-15", "location": "New York", "description": "Dive into data analytics."}
-]
-speakers = {"Tech Summit 2025": [{"name": "Jane Doe", "bio": "Python expert with 10 years experience."}]}
-sponsors = {"Tech Summit 2025": [{"name": "TechCorp", "details": "Leading tech innovator."}]}
+# Sidebar Navigation
+menu = st.sidebar.radio("Menu", ["Event Registration", "Attendee List", "Generate QR Code", "Feedback & Analytics"])
 
-# AI Functions
-def match_skills_to_role(skills):
-    roles = {"speaker": ["python", "data", "tech"], "volunteer": ["organize", "team", "help"]}
-    tokenized_skills = set(word_tokenize(skills.lower()))
-    best_role, best_score = "attendee", 0
-    for role, keywords in roles.items():
-        score = len(tokenized_skills.intersection(set(keywords))) / len(keywords)
-        if score > best_score:
-            best_role, best_score = role, score
-    return best_role if best_score > 0.3 else "attendee"
-
-def analyze_sentiment(feedback):
-    try:
-        sia = SentimentIntensityAnalyzer()
-        score = sia.polarity_scores(feedback)
-        return "Positive" if score['compound'] > 0.1 else "Negative" if score['compound'] < -0.1 else "Neutral"
-    except Exception as e:
-        st.error(f"Sentiment analysis failed: {e}")
-        return "Unknown"
-
-def suggest_schedule(preferences):
-    times = ["09:00", "11:00", "14:00", "16:00"]
-    return random.choice(times) if "morning" in preferences.lower() else random.choice(times[2:])
-
-def generate_qr(ticket_id):
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(f"Ticket ID: {ticket_id}")
-    qr.make(fit=True)
-    img = qr.make_image(fill='black', back_color='white')
-    buf = io.BytesIO()
-    img.save(buf, format="PNG")
-    return buf.getvalue()
-
-def create_ticket_pdf(name, event_title, ticket_id):
+# Utility: QR Code Generator
+def generate_qr_code(data):
+    qr = qrcode.make(data)
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=letter)
-    styles = getSampleStyleSheet()
-    story = [
-        Paragraph(f"<b>Event Ticket</b>", styles['Title']),
-        Paragraph(f"Name: {name}", styles['Normal']),
-        Paragraph(f"Event: {event_title}", styles['Normal']),
-        Paragraph(f"Ticket ID: {ticket_id}", styles['Normal'])
-    ]
-    doc.build(story)
-    buffer.seek(0)
-    return buffer
+    qr.save(buffer, format="PNG")
+    img_b64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+    return img_b64
 
-# Main App
-def main():
-    st.sidebar.title("🌟 EventSync")
-    page = st.sidebar.radio("Navigate", ["Home", "Register", "Agenda", "Speakers & Sponsors", "Check-in", "Feedback", "Analytics"], label_visibility="collapsed")
+# 1. Event Registration Page
+if menu == "Event Registration":
+    st.subheader("📋 Register for the Event")
+    name = st.text_input("Full Name")
+    email = st.text_input("Email")
+    phone = st.text_input("Phone Number")
+    ticket_type = st.selectbox("Ticket Type", ["Free", "VIP", "Student"])
 
-    if page == "Home":
-        st.markdown("<div class='hero'><h1>EventSync: Your Event Hub</h1><p>Plan, Attend, Succeed!</p></div>", unsafe_allow_html=True)
-        st.button("Register Now", on_click=lambda: st.query_params.update({"page": "Register"}))
+    if st.button("Register"):
+        attendee = {
+            "Name": name,
+            "Email": email,
+            "Phone": phone,
+            "Ticket Type": ticket_type,
+            "Timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        }
+        st.session_state.attendees.append(attendee)
+        st.success("Registration successful! QR code will be available in the 'Generate QR Code' section.")
 
-    elif page == "Register":
-        st.title("📝 Event Registration")
-        with st.form("reg_form"):
-            name = st.text_input("Full Name")
-            email = st.text_input("Email")
-            event = st.selectbox("Select Event", [e["title"] for e in events])
-            skills = st.text_input("Your Skills (e.g., Python, Organizing)")
-            submit = st.form_submit_button("Register & Pay")
-            if submit:
-                ticket_id = f"{random.randint(1000, 9999)}-{name.split()[0]}"
-                st.session_state.attendees = st.session_state.get("attendees", []) + [{"name": name, "email": email, "event": event, "ticket_id": ticket_id}]
-                st.success(f"Registered! Ticket ID: {ticket_id}. Confirmation sent to {email} (simulated).")
-                qr_img = generate_qr(ticket_id)
-                st.image(qr_img, caption="Your QR Code")
-                pdf = create_ticket_pdf(name, event, ticket_id)
-                st.download_button("Download Ticket PDF", pdf, f"{ticket_id}_ticket.pdf", "application/pdf")
-                role = match_skills_to_role(skills)
-                st.info(f"AI Suggestion: You’d be great as a {role} for this event!")
+# 2. Attendee List Page
+elif menu == "Attendee List":
+    st.subheader("📋 Registered Attendees")
+    df = pd.DataFrame(st.session_state.attendees)
+    if not df.empty:
+        st.dataframe(df)
+        csv = df.to_csv(index=False).encode('utf-8')
+        st.download_button("📥 Download CSV", csv, "attendees.csv", "text/csv")
+    else:
+        st.info("No attendees registered yet.")
 
-    elif page == "Agenda":
-        st.title("🗓️ Event Agenda")
-        for event in events:
-            st.markdown(f"<div class='card'><h3>{event['title']}</h3><p>Date: {event['date']}</p><p>Location: {event['location']}</p><p>{event['description']}</p></div>", unsafe_allow_html=True)
+# 3. QR Code Generation
+elif menu == "Generate QR Code":
+    st.subheader("🎫 Generate Ticket QR Code")
+    email_input = st.text_input("Enter your registered email")
+    attendee_df = pd.DataFrame(st.session_state.attendees)
+    
+    if st.button("Generate QR"):
+        matched = attendee_df[attendee_df['Email'] == email_input]
+        if not matched.empty:
+            data = matched.to_json()
+            qr_img = generate_qr_code(data)
+            st.markdown(f'<img src="data:image/png;base64,{qr_img}" width="200"/>', unsafe_allow_html=True)
+            st.success("QR Code Generated!")
+        else:
+            st.warning("No registration found with this email.")
 
-    elif page == "Speakers & Sponsors":
-        st.title("🎤 Speakers & Sponsors")
-        event = st.selectbox("Select Event", [e["title"] for e in events])
-        st.subheader("Speakers")
-        for speaker in speakers.get(event, []):
-            st.markdown(f"<div class='card'><h3>{speaker['name']}</h3><p>{speaker['bio']}</p></div>", unsafe_allow_html=True)
-        st.subheader("Sponsors")
-        for sponsor in sponsors.get(event, []):
-            st.markdown(f"<div class='card'><h3>{sponsor['name']}</h3><p>{sponsor['details']}</p></div>", unsafe_allow_html=True)
+# 4. Feedback & Analytics
+elif menu == "Feedback & Analytics":
+    st.subheader("📊 Event Feedback & Insights")
+    with st.form("Feedback Form"):
+        feedback_name = st.text_input("Your Name")
+        rating = st.slider("Rate the Event", 1, 5)
+        comments = st.text_area("Additional Comments")
+        submitted = st.form_submit_button("Submit Feedback")
+        if submitted:
+            st.success("Thanks for your feedback!")
 
-    elif page == "Check-in":
-        st.title("✅ Check-in")
-        ticket_id = st.text_input("Enter Ticket ID")
-        if st.button("Validate QR"):
-            attendees = st.session_state.get("attendees", [])
-            if any(a["ticket_id"] == ticket_id for a in attendees):
-                st.success(f"Valid Ticket! Welcome, {next(a['name'] for a in attendees if a['ticket_id'] == ticket_id)}!")
-            else:
-                st.error("Invalid Ticket ID.")
-
-    elif page == "Feedback":
-        st.title("📊 Feedback")
-        with st.form("feedback_form"):
-            event = st.selectbox("Event", [e["title"] for e in events])
-            feedback = st.text_area("Your Feedback")
-            time_pref = st.text_input("Preferred Session Time (e.g., morning)")
-            submit = st.form_submit_button("Submit")
-            if submit:
-                st.session_state.feedback = st.session_state.get("feedback", []) + [{"event": event, "text": feedback}]
-                sentiment = analyze_sentiment(feedback)
-                st.success(f"Thanks! Sentiment: {sentiment}")
-                schedule = suggest_schedule(time_pref)
-                st.info(f"AI Suggestion: Next session at {schedule}")
-
-    elif page == "Analytics":
-        st.title("📈 Analytics")
-        attendees = st.session_state.get("attendees", [])
-        feedback = st.session_state.get("feedback", [])
-        st.write(f"Total Attendees: {len(attendees)}")
-        for event in events:
-            count = sum(1 for a in attendees if a["event"] == event["title"])
-            st.markdown(f"<div class='card'><p>{event['title']}: {count} attendees</p></div>", unsafe_allow_html=True)
-        st.subheader("Feedback Insights")
-        for fb in feedback:
-            sentiment = analyze_sentiment(fb["text"])
-            st.markdown(f"<div class='card'><p>{fb['event']}: {fb['text']} (Sentiment: {sentiment})</p></div>", unsafe_allow_html=True)
-
-if __name__ == "__main__":
-    main()
+    
+    # Analytics Demo (from session data)
+    df = pd.DataFrame(st.session_state.attendees)
+    if not df.empty:
+        st.markdown("### Ticket Type Distribution")
+        st.bar_chart(df['Ticket Type'].value_counts())
